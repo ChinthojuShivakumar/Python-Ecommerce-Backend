@@ -12,9 +12,9 @@ def register_user():
 def login_user():
     return login()
 
-@auth_bp.route("/user", methods=["POST"])
-def register_user():
-    return register()
+# @auth_bp.route("/user", methods=["POST"])
+# def register_user():
+#     return register()
 
 
 @auth_bp.route("/user", methods=["GET"])

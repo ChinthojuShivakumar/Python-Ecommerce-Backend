@@ -1,1 +1,2 @@
 from Controllers.user_controller import register
+from Controllers.product_controller import get_all_product_list
