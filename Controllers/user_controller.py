@@ -6,6 +6,7 @@ import jwt
 import datetime
 from config import Config
 import traceback
+from bson import ObjectId
 
 def register():
     try:
@@ -52,10 +53,41 @@ def login():
 
 def get_users_list():
     try:
-        user_list = mongo.db.users.find({})
+        user_list = list(mongo.db.users.find({"deleted": False}, {"deleted": 0, "deleted_at": 0}))
         for user in user_list:
-            user["_id"] = str(user["_id"])
+            user["_id"] = str(user["_id"]) 
         return jsonify({"message":"Users List Fetched successfully", "user_list": user_list}), 200
     except Exception as e:
         return jsonify({"message": "Internal Server Error", "error": str(e)}), 500
+
+def update_user(user_id):
+    try:
+        data = request.json
+        find_user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+        if not find_user:
+            return jsonify({"message":"User not found", "find_user": find_user}), 400
+        find_user["updated_at"] = datetime.datetime.utcnow()
+        mongo.db.users.update_one({"_id": ObjectId(user_id)}, {"$set": data})
+        updated_user = mongo.db.users.find_one({"_id": ObjectId(user_id)}, {"deleted": 0, "deleted_at": 0})
+        if updated_user:
+            updated_user["_id"] = str(updated_user["_id"])
+        return jsonify({"message": "user updated successfully", "user": updated_user}), 202
+    except Exception as e:
+        return jsonify({"message": "Internal Server Error", "error": str(e)}), 500
+    
+def delete_user(user_id):
+    try:
+        data = request.json
+        find_user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+        if not find_user:
+            return jsonify({"message":"User not found", "find_user": find_user}), 400
+        find_user["updated_at"] = datetime.datetime.utcnow()
+        mongo.db.users.update_one({"_id": ObjectId(user_id)}, {"$set": {"deleted": True, "deleted_at":datetime.datetime.utcnow()}})
+        deleted_user = mongo.db.users.find_one({"_id": ObjectId(user_id)}, {"deleted": 0, "deleted_at": 0})
+        if deleted_user:
+            deleted_user["_id"] = str(deleted_user["_id"])
+        return jsonify({"message": "user deleted successfully", "user": deleted_user}), 202
+    except Exception as e:
+        return jsonify({"message": "Internal Server Error", "error": str(e)}), 500
+
 
